@@ -230,6 +230,34 @@
   }
   #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
+  /* ---------- LOGIN ---------- */
+  .login-overlay{
+    display:none; position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,0.75); backdrop-filter:blur(4px);
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .login-overlay.show{ display:flex; }
+  .login-card{
+    position:relative; width:100%; max-width:340px;
+    background:var(--panel); border:1px solid #2a2a2a; border-radius:12px; padding:26px 22px;
+  }
+  .login-card h2{ font-size:19px; font-weight:800; margin-bottom:8px; }
+  .login-card p{ font-size:12.5px; color:var(--text-dim); line-height:1.5; margin-bottom:16px; }
+  .login-card input{
+    width:100%; background:#0a0a0a; border:1px solid #2b2b2b; color:var(--text);
+    padding:11px 12px; border-radius:7px; font-size:14px; font-family:'Inter'; margin-bottom:12px;
+  }
+  .login-btn{
+    width:100%; background:var(--red); color:#fff; border:none; font-weight:800;
+    font-size:13.5px; padding:12px; border-radius:7px; cursor:pointer;
+  }
+  .login-btn.secondary{ background:rgba(109,109,110,0.5); margin-top:6px; }
+  .login-msg{ font-size:12px; color:var(--text-dim); margin-top:10px; text-align:center; }
+  .login-close{
+    position:absolute; top:14px; right:14px; background:none; border:none;
+    color:var(--text-dim); font-size:16px; cursor:pointer;
+  }
+
   @media (min-width:640px){
     body{ max-width:480px; margin:0 auto; border-left:1px solid #1a1a1a; border-right:1px solid #1a1a1a; min-height:100vh; }
     nav.tabbar, header{ max-width:480px; margin:0 auto; }
@@ -257,11 +285,29 @@
 <div id="heroWrap"></div>
 <div class="rows" id="rows"></div>
 
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <button class="login-close" onclick="fecharLogin()">✕</button>
+    <div id="loginLoggedOut">
+      <h2>Entrar</h2>
+      <p>Digite o email que você usou na compra. Vamos te enviar um link de acesso — sem senha.</p>
+      <input type="email" id="loginEmail" placeholder="seuemail@exemplo.com">
+      <button class="login-btn" onclick="enviarLink()">Enviar link de acesso</button>
+      <div id="loginMsg" class="login-msg"></div>
+    </div>
+    <div id="loginLoggedIn" style="display:none;">
+      <h2>Você está logado</h2>
+      <p id="loginEmailAtual" style="color:var(--text);font-weight:700;"></p>
+      <button class="login-btn secondary" onclick="sair()">Sair</button>
+    </div>
+  </div>
+</div>
+
 <nav class="tabbar">
   <button class="tab active" onclick="showToast('Você já está no Início')"><span class="ic">🏠</span>Início</button>
   <button class="tab" onclick="showToast('Sua biblioteca completa em breve')"><span class="ic">📚</span>Biblioteca</button>
   <button class="tab" onclick="showToast('Novidades e lançamentos em breve')"><span class="ic">✨</span>Novidades</button>
-  <button class="tab" onclick="showToast('Seu perfil em breve')"><span class="ic">👤</span>Perfil</button>
+  <button class="tab" onclick="abrirLogin()"><span class="ic">👤</span>Perfil</button>
 </nav>
 
 <div id="toast"></div>
@@ -276,8 +322,49 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ---------------------------------------------------------
-   MODO DEMO DE ACESSO — substitua futuramente por consulta
-   real na tabela "compras", cruzando com o email do cliente logado.
+   LOGIN DO CLIENTE (magic link, sem senha)
+--------------------------------------------------------- */
+function abrirLogin(){ document.getElementById('loginOverlay').classList.add('show'); }
+function fecharLogin(){ document.getElementById('loginOverlay').classList.remove('show'); }
+
+async function enviarLink(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const msg = document.getElementById('loginMsg');
+  if(!email){ msg.textContent = 'Digite um email válido.'; return; }
+  msg.textContent = 'Enviando...';
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href.split('#')[0].split('?')[0] }
+  });
+  msg.textContent = error ? ('Erro: ' + error.message) : 'Link enviado! Confira seu email (e a caixa de spam) e clique no link pra entrar.';
+}
+
+async function sair(){
+  await sb.auth.signOut();
+  showToast('Você saiu da conta');
+  fecharLogin();
+  carregarApp();
+}
+
+async function atualizarEstadoLogin(){
+  const { data: { user } } = await sb.auth.getUser();
+  const loggedOut = document.getElementById('loginLoggedOut');
+  const loggedIn = document.getElementById('loginLoggedIn');
+  if(user){
+    loggedOut.style.display = 'none';
+    loggedIn.style.display = 'block';
+    document.getElementById('loginEmailAtual').textContent = user.email;
+  } else {
+    loggedOut.style.display = 'block';
+    loggedIn.style.display = 'none';
+  }
+  return user;
+}
+
+/* ---------------------------------------------------------
+   MODO DEMO DE ACESSO — usado só quando ninguém está logado,
+   pra você conseguir visualizar/testar o layout sem precisar
+   logar toda hora. Uma vez logado, o app usa as compras reais.
 --------------------------------------------------------- */
 const NICHOS_DESBLOQUEADOS_DEMO = ['pet'];
 
@@ -352,7 +439,7 @@ function renderHero(destaque, nicho){
   `;
 }
 
-function renderNichos(nichos, produtosPorNicho){
+function renderNichos(nichos, produtosPorNicho, acesso){
   const root = document.getElementById('rows');
   const nav = document.getElementById('catNav');
   if(!nichos.length){
@@ -367,8 +454,14 @@ function renderNichos(nichos, produtosPorNicho){
   let heroSet = false;
 
   root.innerHTML = nichos.map(n => {
-    const comprado = NICHOS_DESBLOQUEADOS_DEMO.includes((n.slug || '').toLowerCase());
-    const produtos = (produtosPorNicho[n.id] || []).map(p => ({ ...p, owned: comprado && p.tipo === 'principal' }));
+    const comprado = acesso.logado
+      ? acesso.nichosLiberados.has(n.id)
+      : NICHOS_DESBLOQUEADOS_DEMO.includes((n.slug || '').toLowerCase());
+
+    const produtos = (produtosPorNicho[n.id] || []).map(p => ({
+      ...p,
+      owned: comprado ? (p.tipo === 'principal' || acesso.produtosLiberados.has(p.id)) : false
+    }));
 
     if(!heroSet && produtos.length){
       const principal = produtos.find(p => p.tipo === 'principal') || produtos[0];
@@ -401,9 +494,26 @@ function renderNichos(nichos, produtosPorNicho){
   if(!heroSet) renderHero(null, null);
 }
 
+async function carregarAcesso(user){
+  if(!user){
+    return { logado: false, nichosLiberados: new Set(), produtosLiberados: new Set() };
+  }
+  const { data: compras, error } = await sb.from('compras').select('nicho_id, produto_id').eq('email', user.email);
+  if(error){
+    showToast('Erro ao carregar suas compras: ' + error.message);
+    return { logado: true, nichosLiberados: new Set(), produtosLiberados: new Set() };
+  }
+  const nichosLiberados = new Set((compras || []).filter(c => c.nicho_id).map(c => c.nicho_id));
+  const produtosLiberados = new Set((compras || []).filter(c => c.produto_id).map(c => c.produto_id));
+  return { logado: true, nichosLiberados, produtosLiberados };
+}
+
 async function carregarApp(){
   const root = document.getElementById('rows');
   root.innerHTML = `<div style="padding:30px 16px; color:var(--text-dim); font-size:13px;">Carregando sua biblioteca…</div>`;
+
+  const user = await atualizarEstadoLogin();
+  const acesso = await carregarAcesso(user);
 
   const { data: nichos, error: e1 } = await sb.from('nichos').select('*').eq('ativo', true).order('ordem');
   if(e1){ root.innerHTML = `<div style="padding:30px 16px; color:#ff6b73; font-size:13px;">Erro ao carregar nichos: ${e1.message}</div>`; return; }
@@ -417,10 +527,13 @@ async function carregarApp(){
     produtosPorNicho[p.nicho_id].push(p);
   });
 
-  renderNichos(nichos || [], produtosPorNicho);
+  renderNichos(nichos || [], produtosPorNicho, acesso);
 }
 
 carregarApp();
+sb.auth.onAuthStateChange((event) => {
+  if(event === 'SIGNED_IN'){ fecharLogin(); showToast('Login feito! Carregando seus produtos…'); carregarApp(); }
+});
 
 /* ---------------------------------------------------------
    PWA: registro do service worker + prompt de instalação
