@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ponte Hub</title>
+
+<!-- ---------- PWA: instalável na tela inicial ---------- -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ponte Hub">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0a;
+    --bg-elev:#141414;
+    --panel:#181818;
+    --red:#E50914;
+    --red-hover:#f6121d;
+    --gold-soft:#f5c542;
+    --text:#ffffff;
+    --text-dim:#a3a3a3;
+    --text-dimmer:#6b6b6b;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:calc(64px + var(--safe-bottom));
+    overscroll-behavior-y:none;
+  }
+  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.02em;}
+  a{color:inherit;}
+  button{font-family:inherit;}
+
+  /* ---------- TOP NAV ---------- */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:80;
+    padding-top:calc(12px + var(--safe-top));
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding-left:16px; padding-right:16px; padding-bottom:12px;
+    background:linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 60%, transparent 100%);
+  }
+  .logo{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .logo .mark{
+    width:26px; height:26px; border-radius:5px;
+    background:var(--red);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-family:'Bebas Neue'; font-size:16px;
+  }
+  .logo span{font-family:'Bebas Neue'; font-size:19px; letter-spacing:0.05em; white-space:nowrap;}
+  .catnav{ display:flex; gap:16px; overflow-x:auto; flex:1; scrollbar-width:none; -ms-overflow-style:none; }
+  .catnav::-webkit-scrollbar{ display:none; }
+  .catnav button{
+    background:none; border:none; color:var(--text-dim); font-size:12.5px; font-weight:600;
+    white-space:nowrap; cursor:pointer; padding:4px 0; border-bottom:2px solid transparent;
+  }
+  .catnav button.active{ color:var(--text); border-color:var(--red); }
+  .avatar{
+    width:28px;height:28px;border-radius:6px;
+    background:linear-gradient(135deg, #6a4fd6, #3f2ea3);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--text); font-weight:800; font-size:11px; flex-shrink:0;
+  }
+
+  /* ---------- INSTALL BANNER ---------- */
+  #installBanner{
+    display:none;
+    margin:calc(56px + var(--safe-top)) 16px 0; padding:12px 14px; border-radius:10px;
+    background:linear-gradient(135deg, rgba(229,9,20,0.18), rgba(229,9,20,0.06));
+    border:1px solid rgba(229,9,20,0.4);
+    align-items:center; gap:12px; position:relative; z-index:70;
+  }
+  #installBanner.show{ display:flex; }
+  #installBanner .ico{ font-size:22px; }
+  #installBanner .txt{ flex:1; font-size:12.5px; color:var(--text-dim); line-height:1.35; }
+  #installBanner .txt b{ color:var(--text); display:block; font-size:13.5px; margin-bottom:1px; }
+  #installBanner button.act{
+    background:var(--red); color:#fff; border:none; font-weight:800;
+    font-size:12px; padding:8px 12px; border-radius:6px; cursor:pointer; white-space:nowrap;
+  }
+  #installBanner .dismiss{
+    background:none; border:none; color:var(--text-dim); font-size:16px; padding:4px 6px; font-weight:400; cursor:pointer;
+  }
+
+  /* ---------- HERO BANNER ---------- */
+  .hero{
+    position:relative; height:78vw; max-height:520px; min-height:340px;
+    background-size:cover; background-position:center top; background-color:var(--bg-elev);
+    display:flex; align-items:flex-end;
+  }
+  .hero::before{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(0deg, var(--bg) 0%, rgba(10,10,10,0.55) 45%, rgba(10,10,10,0.15) 75%, rgba(10,10,10,0.55) 100%);
+  }
+  .hero::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(90deg, rgba(10,10,10,0.75) 0%, transparent 55%);
+  }
+  .hero-content{ position:relative; z-index:2; padding:0 16px 26px; width:100%; }
+  .hero-badge{
+    display:inline-flex; align-items:center; gap:5px;
+    background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18);
+    color:var(--gold-soft); font-size:10.5px; font-weight:800; letter-spacing:0.06em;
+    padding:4px 9px; border-radius:5px; margin-bottom:12px; text-transform:uppercase;
+  }
+  .hero h1{
+    font-family:'Bebas Neue'; font-size:clamp(30px,9vw,52px); line-height:0.98;
+    max-width:640px; text-shadow:0 2px 12px rgba(0,0,0,0.5);
+  }
+  .hero p{ color:#dcdcdc; margin-top:10px; max-width:440px; font-size:13px; line-height:1.55; text-shadow:0 1px 6px rgba(0,0,0,0.6); }
+  .hero-actions{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .btn-primary{
+    display:flex; align-items:center; gap:7px;
+    background:#fff; color:#000; border:none; font-weight:800;
+    font-size:13.5px; padding:11px 20px; border-radius:6px; cursor:pointer;
+  }
+  .btn-primary.locked{ background:var(--red); color:#fff; }
+  .btn-secondary{
+    display:flex; align-items:center; gap:7px;
+    background:rgba(109,109,110,0.5); color:#fff; border:none; font-weight:700;
+    font-size:13.5px; padding:11px 18px; border-radius:6px; cursor:pointer;
+  }
+
+  /* ---------- ROWS ---------- */
+  .rows{ padding:22px 0 40px; margin-top:-40px; position:relative; z-index:3; }
+  .row-block{ margin-top:26px; }
+  .row-head{ display:flex; align-items:baseline; gap:10px; padding:0 16px; margin-bottom:8px; }
+  .row-head h2{ font-size:16px; font-weight:800; letter-spacing:-0.01em; }
+  .row-head .status{ font-size:10px; padding:2px 8px; border-radius:4px; font-weight:700; letter-spacing:0.03em; }
+  .status.unlocked{ background:rgba(229,9,20,0.18); color:#ff6b73; }
+  .status.locked{ background:rgba(255,255,255,0.08); color:var(--text-dimmer); }
+
+  .shelf{ display:flex; gap:7px; overflow-x:auto; padding:8px 16px 14px; scroll-snap-type:x proximity; }
+  .shelf::-webkit-scrollbar{ display:none; }
+
+  .card{
+    position:relative; flex:0 0 148px; scroll-snap-align:start;
+    border-radius:4px; overflow:visible; cursor:pointer;
+    transition:transform .25s cubic-bezier(.2,.8,.3,1), z-index 0s;
+  }
+  .card:active{ transform:scale(0.96); }
+  @media (hover:hover){
+    .card:hover{ transform:scale(1.14); z-index:10; }
+    .card:hover .cover{ border-radius:4px 4px 0 0; box-shadow:0 14px 28px rgba(0,0,0,0.55); }
+    .card:hover .hover-info{ opacity:1; transform:translateY(0); }
+  }
+  .card .cover{
+    height:96px; border-radius:4px; display:flex; align-items:center; justify-content:center;
+    font-family:'Bebas Neue'; font-size:13px; text-align:center; padding:8px;
+    color:#fff; background-color:var(--panel);
+    background-size:cover; background-position:center; background-repeat:no-repeat;
+    position:relative; overflow:hidden;
+  }
+  .card .cover.has-img{ color:transparent; }
+  .card .cover .fallback-label{ position:relative; z-index:1; white-space:pre-line; }
+  .card .cover::after{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.65) 100%);
+  }
+  .card-title{
+    font-size:10.5px; margin-top:5px; line-height:1.25; font-weight:600; color:var(--text-dim);
+    display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .hover-info{
+    position:absolute; left:0; right:0; top:96px; background:var(--panel);
+    border-radius:0 0 4px 4px; padding:9px 10px 11px; box-shadow:0 14px 28px rgba(0,0,0,0.55);
+    opacity:0; transform:translateY(-4px); transition:opacity .2s ease, transform .2s ease; pointer-events:none;
+  }
+  .hover-info .kind{ font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dimmer); font-weight:700; }
+  .hover-info h3{ font-size:11.5px; margin-top:3px; line-height:1.25; font-weight:700; color:#fff; }
+  .hover-info .cta{ margin-top:7px; font-size:11px; font-weight:700; display:flex; align-items:center; gap:5px; }
+
+  .card.locked .cover{ filter:grayscale(65%) brightness(0.5); }
+  .card.locked .cover:not(.has-img){ background:repeating-linear-gradient(135deg, #1c1c1c 0px, #1c1c1c 10px, #171717 10px, #171717 20px); color:var(--text-dimmer); filter:none; }
+  .lock-badge{
+    position:absolute; top:6px; right:6px; z-index:2;
+    width:20px; height:20px; border-radius:50%;
+    background:rgba(0,0,0,0.65); border:1px solid rgba(255,255,255,0.15);
+    display:flex; align-items:center; justify-content:center; font-size:9px;
+  }
+  .card.owned .hover-info .cta{ color:#ff6b73; }
+  .card.locked .hover-info .cta{ color:var(--gold-soft); }
+
+  .row-locked-overlay{ padding:0 16px; }
+  .locked-strip{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    background:var(--panel); border:1px solid #262626; border-radius:8px; padding:13px 14px;
+  }
+  .locked-strip .msg{ font-size:12px; color:var(--text-dim); flex:1; min-width:160px; }
+  .locked-strip .msg b{ color:var(--text); }
+  .btn-unlock{
+    background:var(--red); color:#fff; border:none; font-weight:800;
+    font-size:11.5px; letter-spacing:0.01em; padding:9px 14px; border-radius:6px; cursor:pointer;
+  }
+  .btn-unlock:hover{ background:var(--red-hover); }
+
+  /* ---------- BOTTOM TAB BAR ---------- */
+  nav.tabbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:60;
+    display:flex; justify-content:space-around; align-items:center;
+    background:rgba(20,20,20,0.94); backdrop-filter:blur(14px);
+    border-top:1px solid #262626;
+    padding:8px 6px calc(8px + var(--safe-bottom));
+  }
+  .tab{
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:var(--text-dimmer); font-size:10px; font-weight:600; background:none; border:none;
+    cursor:pointer; padding:4px 10px;
+  }
+  .tab .ic{ font-size:19px; line-height:1; }
+  .tab.active{ color:#fff; }
+
+  #toast{
+    position:fixed; bottom:calc(76px + var(--safe-bottom)); left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--panel); border:1px solid #2d2d2d; color:var(--text);
+    padding:11px 16px; border-radius:8px; font-size:12.5px; opacity:0; pointer-events:none;
+    transition:all .25s ease; z-index:100; max-width:88vw; text-align:center;
+  }
+  #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (min-width:640px){
+    body{ max-width:480px; margin:0 auto; border-left:1px solid #1a1a1a; border-right:1px solid #1a1a1a; min-height:100vh; }
+    nav.tabbar, header{ max-width:480px; margin:0 auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="mark">P</div>
+    <span>PONTE HUB</span>
+  </div>
+  <nav class="catnav" id="catNav"></nav>
+  <div class="avatar">RA</div>
+</header>
+
+<div id="installBanner">
+  <div class="ico">📲</div>
+  <div class="txt"><b>Instale o Ponte Hub</b>Acesso rápido direto da sua tela inicial.</div>
+  <button class="act" onclick="installApp()">Instalar</button>
+  <button class="dismiss" onclick="dismissBanner()">✕</button>
+</div>
+
+<div id="heroWrap"></div>
+<div class="rows" id="rows"></div>
+
+<nav class="tabbar">
+  <button class="tab active" onclick="showToast('Você já está no Início')"><span class="ic">🏠</span>Início</button>
+  <button class="tab" onclick="showToast('Sua biblioteca completa em breve')"><span class="ic">📚</span>Biblioteca</button>
+  <button class="tab" onclick="showToast('Novidades e lançamentos em breve')"><span class="ic">✨</span>Novidades</button>
+  <button class="tab" onclick="showToast('Seu perfil em breve')"><span class="ic">👤</span>Perfil</button>
+</nav>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ---------------------------------------------------------
+   CONEXÃO COM O BANCO (Supabase) — chave pública, segura de expor
+--------------------------------------------------------- */
+const SUPABASE_URL = 'https://daxlnqujdbcoyyxtyjyz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRheGxucXVqZGJjb3l5eHR5anl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzODUzODgsImV4cCI6MjA5OTk2MTM4OH0.wkUarceAvubIV42bR8pMdJgsbukOq1hiAVxHHMv5Et8';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ---------------------------------------------------------
+   MODO DEMO DE ACESSO — substitua futuramente por consulta
+   real na tabela "compras", cruzando com o email do cliente logado.
+--------------------------------------------------------- */
+const NICHOS_DESBLOQUEADOS_DEMO = ['pet'];
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function goCheckout(url, nome){
+  showToast('Redirecionando para o checkout: ' + nome + ' →');
+  // Em produção: window.location.href = url  (link real de checkout Kiwify/Cakto)
+}
+function scrollToRow(id){
+  document.querySelectorAll('.catnav button').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.catnav button[data-target="${id}"]`);
+  if(btn) btn.classList.add('active');
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+const TIPO_LABEL = { principal: 'Produto principal', order_bump: 'Order bump', bonus: 'Bônus' };
+
+function cardHTML(p, cor){
+  const locked = !p.owned;
+  const precoTxt = p.preco_centavos ? 'R$ ' + (p.preco_centavos/100).toFixed(2).replace('.',',') : '';
+  const cta = p.owned ? '▶ Acessar' : (p.tipo === 'principal' ? '🔒 ' + (precoTxt || 'Desbloquear') : '🔒 ' + precoTxt);
+  const hasImg = !!(p.imagem_url && p.imagem_url.trim());
+  const coverStyle = hasImg ? `background-image:url('${p.imagem_url}');` : `background:${locked ? '' : `linear-gradient(135deg, ${cor}, ${cor}cc)`};`;
+  const coverInner = hasImg ? '' : `<span class="fallback-label">${p.nome.toUpperCase()}</span>`;
+  const clickAttr = locked
+    ? `onclick="goCheckout('${p.checkout_url}','${p.nome.replace(/'/g,"")}')"`
+    : `onclick="showToast('Abrindo: ${p.nome.replace(/'/g,"")}')"`;
+  return `
+    <div class="card ${locked ? 'locked' : 'owned'}" ${clickAttr}>
+      ${locked ? '<div class="lock-badge">🔒</div>' : ''}
+      <div class="cover ${hasImg ? 'has-img' : ''}" style="${coverStyle}">${coverInner}</div>
+      <div class="card-title">${p.nome}</div>
+      <div class="hover-info">
+        <div class="kind">${TIPO_LABEL[p.tipo] || p.tipo}</div>
+        <h3>${p.nome}</h3>
+        <div class="cta">${cta}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderHero(destaque, nicho){
+  const wrap = document.getElementById('heroWrap');
+  if(!destaque){
+    wrap.innerHTML = '';
+    return;
+  }
+  const locked = !destaque.owned;
+  const bg = destaque.imagem_url ? `background-image:url('${destaque.imagem_url}');` : `background:linear-gradient(135deg, ${nicho.cor}, #141414);`;
+  const btn = locked
+    ? `<button class="btn-primary locked" onclick="goCheckout('${destaque.checkout_url}','${destaque.nome.replace(/'/g,"")}')">🔒 Desbloquear</button>`
+    : `<button class="btn-primary" onclick="showToast('Abrindo: ${destaque.nome.replace(/'/g,"")}')">▶ Acessar agora</button>`;
+  wrap.innerHTML = `
+    <section class="hero" style="${bg}">
+      <div class="hero-content">
+        <div class="hero-badge">✦ ${locked ? 'Em destaque' : 'Seu produto'}</div>
+        <h1 class="display">${destaque.nome}</h1>
+        <p>${nicho.nome} · ${TIPO_LABEL[destaque.tipo] || destaque.tipo}${destaque.preco_centavos ? ' · R$ ' + (destaque.preco_centavos/100).toFixed(2).replace('.',',') : ''}</p>
+        <div class="hero-actions">
+          ${btn}
+          <button class="btn-secondary" onclick="scrollToRow('nicho-${nicho.slug}')">ⓘ Mais info</button>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderNichos(nichos, produtosPorNicho){
+  const root = document.getElementById('rows');
+  const nav = document.getElementById('catNav');
+  if(!nichos.length){
+    root.innerHTML = `<div style="padding:30px 16px; color:var(--text-dim); font-size:13px;">Nenhum produto cadastrado ainda. Cadastre nichos e produtos pelo admin.html.</div>`;
+    nav.innerHTML = '';
+    renderHero(null, null);
+    return;
+  }
+
+  nav.innerHTML = nichos.map((n,i) => `<button data-target="nicho-${n.slug}" class="${i===0?'active':''}" onclick="scrollToRow('nicho-${n.slug}')">${n.nome}</button>`).join('');
+
+  let heroSet = false;
+
+  root.innerHTML = nichos.map(n => {
+    const comprado = NICHOS_DESBLOQUEADOS_DEMO.includes((n.slug || '').toLowerCase());
+    const produtos = (produtosPorNicho[n.id] || []).map(p => ({ ...p, owned: comprado && p.tipo === 'principal' }));
+
+    if(!heroSet && produtos.length){
+      const principal = produtos.find(p => p.tipo === 'principal') || produtos[0];
+      renderHero(principal, n);
+      heroSet = true;
+    }
+
+    if(comprado){
+      return `
+        <div class="row-block" id="nicho-${n.slug}">
+          <div class="row-head"><h2>${n.nome}</h2><span class="status unlocked">Seu nicho</span></div>
+          <div class="shelf">${produtos.map(p => cardHTML(p, n.cor)).join('')}</div>
+        </div>
+      `;
+    }
+    return `
+      <div class="row-block" id="nicho-${n.slug}">
+        <div class="row-head"><h2>${n.nome}</h2><span class="status locked">Bloqueado</span></div>
+        <div class="shelf">${produtos.map(p => cardHTML(p, n.cor)).join('')}</div>
+        <div class="row-locked-overlay">
+          <div class="locked-strip">
+            <div class="msg">Você ainda não tem acesso. <b>${produtos.length} itens</b> esperando.</div>
+            <button class="btn-unlock" onclick="goCheckout('${(produtos[0] || {}).checkout_url || '#'}','${n.nome}')">Desbloquear →</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if(!heroSet) renderHero(null, null);
+}
+
+async function carregarApp(){
+  const root = document.getElementById('rows');
+  root.innerHTML = `<div style="padding:30px 16px; color:var(--text-dim); font-size:13px;">Carregando sua biblioteca…</div>`;
+
+  const { data: nichos, error: e1 } = await sb.from('nichos').select('*').eq('ativo', true).order('ordem');
+  if(e1){ root.innerHTML = `<div style="padding:30px 16px; color:#ff6b73; font-size:13px;">Erro ao carregar nichos: ${e1.message}</div>`; return; }
+
+  const { data: produtos, error: e2 } = await sb.from('produtos').select('*').eq('ativo', true).order('ordem');
+  if(e2){ root.innerHTML = `<div style="padding:30px 16px; color:#ff6b73; font-size:13px;">Erro ao carregar produtos: ${e2.message}</div>`; return; }
+
+  const produtosPorNicho = {};
+  (produtos || []).forEach(p => {
+    if(!produtosPorNicho[p.nicho_id]) produtosPorNicho[p.nicho_id] = [];
+    produtosPorNicho[p.nicho_id].push(p);
+  });
+
+  renderNichos(nichos || [], produtosPorNicho);
+}
+
+carregarApp();
+
+/* ---------------------------------------------------------
+   PWA: registro do service worker + prompt de instalação
+--------------------------------------------------------- */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!sessionStorage.getItem('installDismissed')) {
+    document.getElementById('installBanner').classList.add('show');
+  }
+});
+function installApp(){
+  document.getElementById('installBanner').classList.remove('show');
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt = null;
+  } else {
+    showToast('No iPhone: toque em Compartilhar → Adicionar à Tela de Início');
+  }
+}
+function dismissBanner(){
+  document.getElementById('installBanner').classList.remove('show');
+  sessionStorage.setItem('installDismissed','1');
+}
+window.addEventListener('appinstalled', () => showToast('App instalado! 🎉'));
+</script>
+</body>
+</html>
