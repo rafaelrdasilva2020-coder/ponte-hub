@@ -401,8 +401,12 @@ function showToast(msg){
   showToast._t = setTimeout(()=>t.classList.remove('show'), 2600);
 }
 function goCheckout(url, nome){
+  if(!url || url === '#'){
+    showToast('Este produto ainda não tem link de checkout cadastrado.');
+    return;
+  }
   showToast('Redirecionando para o checkout: ' + nome + ' →');
-  // Em produção: window.location.href = url  (link real de checkout Kiwify/Cakto)
+  setTimeout(() => { window.location.href = url; }, 400);
 }
 function scrollToRow(id){
   document.querySelectorAll('.catnav button').forEach(b => b.classList.remove('active'));
