@@ -258,6 +258,23 @@
     color:var(--text-dim); font-size:16px; cursor:pointer;
   }
 
+  /* ---------- MÓDULOS ---------- */
+  .conteudo-card{ max-width:420px; max-height:80vh; overflow-y:auto; }
+  .modulo-item{
+    display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #262626; cursor:pointer;
+  }
+  .modulo-item:last-child{ border-bottom:none; }
+  .modulo-item .ic{
+    width:38px; height:38px; border-radius:8px; background:#0a0a0a; border:1px solid #262626;
+    display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;
+  }
+  .modulo-item .titulo{ font-size:13.5px; font-weight:700; flex:1; }
+  .modulo-item .seta{ color:var(--text-dimmer); font-size:14px; }
+  .modulo-texto{ font-size:13px; line-height:1.6; color:var(--text-dim); white-space:pre-line; padding:6px 0 0; }
+  .modulo-video{ position:relative; width:100%; padding-top:56.25%; border-radius:8px; overflow:hidden; margin-top:8px; }
+  .modulo-video iframe{ position:absolute; inset:0; width:100%; height:100%; border:none; }
+  .voltar-modulos{ background:none; border:none; color:var(--text-dim); font-size:12px; font-weight:700; cursor:pointer; margin-bottom:10px; padding:0; }
+
   @media (min-width:640px){
     body{ max-width:480px; margin:0 auto; border-left:1px solid #1a1a1a; border-right:1px solid #1a1a1a; min-height:100vh; }
     nav.tabbar, header{ max-width:480px; margin:0 auto; }
@@ -300,6 +317,14 @@
       <p id="loginEmailAtual" style="color:var(--text);font-weight:700;"></p>
       <button class="login-btn secondary" onclick="sair()">Sair</button>
     </div>
+  </div>
+</div>
+
+<div id="conteudoOverlay" class="login-overlay">
+  <div class="login-card conteudo-card">
+    <button class="login-close" onclick="fecharConteudo()">✕</button>
+    <h2 id="conteudoModalTitulo">Módulos</h2>
+    <div id="conteudoModalBody"></div>
   </div>
 </div>
 
@@ -389,6 +414,81 @@ function scrollToRow(id){
 
 const TIPO_LABEL = { principal: 'Produto principal', order_bump: 'Order bump', bonus: 'Bônus' };
 
+function embedVideoUrl(url){
+  if(!url) return null;
+  const yt = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/embed\/)([a-zA-Z0-9_-]{6,})/);
+  if(yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  const vm = url.match(/vimeo\.com\/(\d+)/);
+  if(vm) return `https://player.vimeo.com/video/${vm[1]}`;
+  return null;
+}
+
+const TIPO_ICON = { pdf: '📄', video: '🎬', texto: '📝', link: '🔗' };
+
+function abrirConteudoOverlay(){ document.getElementById('conteudoOverlay').classList.add('show'); }
+function fecharConteudo(){ document.getElementById('conteudoOverlay').classList.remove('show'); }
+
+function renderListaModulos(nome, modulos){
+  document.getElementById('conteudoModalTitulo').textContent = nome;
+  const body = document.getElementById('conteudoModalBody');
+  if(!modulos.length){
+    body.innerHTML = `<p style="font-size:12.5px;color:var(--text-dim);">Nenhum módulo cadastrado ainda pra este produto.</p>`;
+    return;
+  }
+  body.innerHTML = modulos.map((m, i) => `
+    <div class="modulo-item" onclick="abrirModulo(${i})">
+      <div class="ic">${TIPO_ICON[m.tipo] || '📦'}</div>
+      <div class="titulo">${m.titulo}</div>
+      <div class="seta">›</div>
+    </div>
+  `).join('');
+}
+
+let modulosAtuais = [];
+let nomeConteudoAtual = '';
+
+function abrirModulo(i){
+  const m = modulosAtuais[i];
+  const body = document.getElementById('conteudoModalBody');
+  const voltar = `<button class="voltar-modulos" onclick="renderListaModulos(nomeConteudoAtual, modulosAtuais)">‹ Voltar aos módulos</button>`;
+
+  if(m.tipo === 'texto'){
+    body.innerHTML = voltar + `<h3 style="font-size:14px;margin-bottom:8px;">${m.titulo}</h3><div class="modulo-texto">${(m.texto||'').replace(/</g,'&lt;')}</div>`;
+    return;
+  }
+  if(m.tipo === 'video'){
+    const embed = embedVideoUrl(m.url);
+    body.innerHTML = voltar + `<h3 style="font-size:14px;margin-bottom:4px;">${m.titulo}</h3>` +
+      (embed ? `<div class="modulo-video"><iframe src="${embed}" allow="autoplay; fullscreen" allowfullscreen></iframe></div>`
+             : `<p style="font-size:12.5px;color:var(--text-dim);">Link de vídeo não reconhecido. <a href="${m.url}" target="_blank" style="color:#ff6b73;">Abrir em nova aba →</a></p>`);
+    return;
+  }
+  // pdf ou link: abre em nova aba
+  window.open(m.url, '_blank');
+}
+
+async function abrirProduto(produtoId, nome, conteudoUrlFallback){
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user){ showToast('Faça login (aba Perfil) pra acessar seu conteúdo.'); abrirLogin(); return; }
+
+  const { data: modulos, error } = await sb.from('conteudos').select('*').eq('produto_id', produtoId).eq('ativo', true).order('ordem');
+
+  if(error || !modulos || !modulos.length){
+    // Sem módulos cadastrados: usa o link de conteúdo simples do produto, se existir
+    if(conteudoUrlFallback){
+      window.open(conteudoUrlFallback, '_blank');
+    } else {
+      showToast('Conteúdo de "' + nome + '" ainda não tem módulos nem link cadastrado.');
+    }
+    return;
+  }
+
+  modulosAtuais = modulos;
+  nomeConteudoAtual = nome;
+  renderListaModulos(nome, modulos);
+  abrirConteudoOverlay();
+}
+
 function cardHTML(p, cor){
   const locked = !p.owned;
   const precoTxt = p.preco_centavos ? 'R$ ' + (p.preco_centavos/100).toFixed(2).replace('.',',') : '';
@@ -398,7 +498,7 @@ function cardHTML(p, cor){
   const coverInner = hasImg ? '' : `<span class="fallback-label">${p.nome.toUpperCase()}</span>`;
   const clickAttr = locked
     ? `onclick="goCheckout('${p.checkout_url}','${p.nome.replace(/'/g,"")}')"`
-    : `onclick="showToast('Abrindo: ${p.nome.replace(/'/g,"")}')"`;
+    : `onclick="abrirProduto('${p.id}','${p.nome.replace(/'/g,"")}','${(p.conteudo_url||'').replace(/'/g,"")}')"`;
   return `
     <div class="card ${locked ? 'locked' : 'owned'}" ${clickAttr}>
       ${locked ? '<div class="lock-badge">🔒</div>' : ''}
@@ -423,7 +523,7 @@ function renderHero(destaque, nicho){
   const bg = destaque.imagem_url ? `background-image:url('${destaque.imagem_url}');` : `background:linear-gradient(135deg, ${nicho.cor}, #141414);`;
   const btn = locked
     ? `<button class="btn-primary locked" onclick="goCheckout('${destaque.checkout_url}','${destaque.nome.replace(/'/g,"")}')">🔒 Desbloquear</button>`
-    : `<button class="btn-primary" onclick="showToast('Abrindo: ${destaque.nome.replace(/'/g,"")}')">▶ Acessar agora</button>`;
+    : `<button class="btn-primary" onclick="abrirProduto('${destaque.id}','${destaque.nome.replace(/'/g,"")}','${(destaque.conteudo_url||'').replace(/'/g,"")}')">▶ Acessar agora</button>`;
   wrap.innerHTML = `
     <section class="hero" style="${bg}">
       <div class="hero-content">
