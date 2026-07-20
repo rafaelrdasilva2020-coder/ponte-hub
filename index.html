@@ -405,8 +405,7 @@ function goCheckout(url, nome){
     showToast('Este produto ainda não tem link de checkout cadastrado.');
     return;
   }
-  showToast('Redirecionando para o checkout: ' + nome + ' →');
-  setTimeout(() => { window.location.href = url; }, 400);
+  window.location.href = url;
 }
 function scrollToRow(id){
   document.querySelectorAll('.catnav button').forEach(b => b.classList.remove('active'));
