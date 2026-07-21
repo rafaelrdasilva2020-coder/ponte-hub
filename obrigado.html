@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compra confirmada — Ponte Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0a; --panel:#181818; --red:#E50914; --red-hover:#f6121d;
+    --gold-soft:#f5c542; --text:#ffffff; --text-dim:#a3a3a3;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:30px 20px; -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.02em;}
+  .wrap{ max-width:440px; width:100%; text-align:center; }
+
+  .logo{ display:flex; align-items:center; justify-content:center; gap:9px; margin-bottom:34px; }
+  .logo .mark{
+    width:30px; height:30px; border-radius:6px; background:var(--red);
+    display:flex; align-items:center; justify-content:center; color:#fff;
+    font-family:'Bebas Neue'; font-size:17px;
+  }
+  .logo span{ font-family:'Bebas Neue'; font-size:20px; letter-spacing:0.06em; }
+
+  .check{
+    width:64px; height:64px; border-radius:50%; background:rgba(229,9,20,0.14);
+    border:1.5px solid rgba(229,9,20,0.4); display:flex; align-items:center; justify-content:center;
+    margin:0 auto 22px; font-size:30px;
+  }
+
+  h1{ font-family:'Bebas Neue'; font-size:34px; line-height:1.05; margin-bottom:10px; }
+  .sub{ color:var(--text-dim); font-size:14px; line-height:1.6; margin-bottom:32px; }
+
+  .steps{ text-align:left; background:var(--panel); border:1px solid #262626; border-radius:12px; padding:22px 20px; margin-bottom:26px; }
+  .step{ display:flex; gap:14px; align-items:flex-start; }
+  .step + .step{ margin-top:18px; }
+  .step .num{
+    width:26px; height:26px; border-radius:50%; background:rgba(229,9,20,0.18); color:#ff6b73;
+    font-weight:800; font-size:12.5px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .step .txt{ font-size:13.5px; line-height:1.55; color:#e5e5e5; }
+  .step .txt b{ color:#fff; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; background:var(--red); color:#fff; text-decoration:none; font-weight:800;
+    font-size:15px; padding:15px; border-radius:8px; margin-bottom:14px;
+  }
+  .btn:hover{ background:var(--red-hover); }
+
+  .note{ font-size:12px; color:var(--text-dim); line-height:1.6; }
+  .note b{ color:var(--gold-soft); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="logo">
+    <div class="mark">P</div>
+    <span>PONTE HUB</span>
+  </div>
+
+  <div class="check">✅</div>
+  <h1>Compra confirmada!</h1>
+  <p class="sub">Seu produto já está te esperando dentro do Ponte Hub — sua biblioteca pessoal, onde fica tudo que você compra com a gente.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <div class="txt">Clique no botão abaixo pra abrir o <b>Ponte Hub</b></div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div class="txt">Toque em <b>Perfil</b> e digite o <b>mesmo email que você usou na compra</b></div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div class="txt">Você vai receber um <b>link de acesso</b> por email — sem senha pra decorar. Clique nele e pronto</div>
+    </div>
+  </div>
+
+  <a class="btn" href="https://rafaelrdasilva2020-coder.github.io/ponte-hub/" target="_blank">Acessar o Ponte Hub →</a>
+
+  <p class="note">Dica: se o email do link demorar a chegar, confira também a <b>caixa de spam</b>. Qualquer dúvida, é só chamar no suporte.</p>
+</div>
+
+</body>
+</html>
